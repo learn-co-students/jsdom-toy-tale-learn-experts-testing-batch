@@ -28,6 +28,10 @@ function fetchToys() {
   .then(function(response) {
     return response.json();
   }).then(function(json) {
+    //setting event listeners in loop didn't work
+    //only worked for last one
+    //can do event listeners in seperate loop
+    //did onclick in html anyway
     json.forEach(function(toy){
       toyCollection.innerHTML += makeCard(toy);
     })
@@ -36,16 +40,14 @@ function fetchToys() {
 }
 
 function makeCard(toy) {
-  console.log(toy)
   return `
-    <div class="card">
+    <div class="card" id=toy-card-${toy.id}>
     <h2>${toy.name}</h2>
     <img src=${toy.image} class="toy-avatar" />
     <p>${toy.likes} Likes </p>
-    <button class="like-btn">Like <3</button>
+    <button class="like-btn" onClick=handleLike(event) id=${toy.id}>Like <3</button>
     </div>
   `
-
 }
 
 
@@ -64,14 +66,45 @@ function addNewToy(event) {
         "Accept": "application/json"
       },
 
-      body: JSON.stringify(formData)
+      body: JSON.stringify(data)
     };
+
     fetch("http://localhost:3000/toys", postedToy)
     .then(function(response) {
       return response.json();
     })
     .then(function(json) {
-      console.log(json)
+      toyCollection.innerHTML += makeCard(json);
 
     })
 }
+
+function handleLike(event) {
+  let card = document.getElementById(`toy-card-${event.target.id}`)
+  let likes = card.children[2]
+  let parsedLikes = parseInt(likes.innerText)
+  likes.innerText = `${ parsedLikes += 1 } Likes`
+
+  let data = {
+    likes: parsedLikes
+  };
+
+  let patchedToy = {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+
+    body: JSON.stringify(data)
+    };
+
+    fetch(`http://localhost:3000/toys/${event.target.id}`, patchedToy)
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(json) {
+        console.log(json);
+      });
+
+  }
